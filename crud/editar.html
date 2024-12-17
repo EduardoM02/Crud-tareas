@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Tarea</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #F4F9FA;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            margin-top: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        .card {
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            background-color: #fff;
+            width: 100%;
+            max-width: 800px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Menú de navegación -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">Inicio</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="tareas.html">Agregar Tareas</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Formulario de editar tarea -->
+    <div class="container">
+        <div class="card">
+            <h2 class="text-center mb-4">Editar Tarea</h2>
+            <form id="form-editar" action="/api/actualizar-tarea" method="post">
+                <input type="hidden" id="id" name="id">
+                <div class="mb-3">
+                    <label for="titulo" class="form-label">Título de la tarea</label>
+                    <input type="text" id="titulo" name="titulo" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label for="descripcion" class="form-label">Descripción</label>
+                    <textarea id="descripcion" name="descripcion" class="form-control" rows="4" required></textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="fecha_limite" class="form-label">Fecha límite</label>
+                    <input type="date" id="fecha_limite" name="fecha_limite" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label for="estado" class="form-label">Estado</label>
+                    <select id="estado" name="estado" class="form-select" required>
+                        <option value="pendiente">Pendiente</option>
+                        <option value="completada">Completada</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Guardar Cambios</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const params = new URLSearchParams(window.location.search);
+            const id = params.get('id');
+
+            if (id) {
+                try {
+                    const res = await axios.get(`/api/tareas/${id}`);
+                    const tarea = res.data;
+
+                    // Formatear la fecha para que sea compatible con el input type="date"
+                    const fecha = new Date(tarea.fecha_limite);
+                    const fechaFormateada = fecha.toISOString().split('T')[0];
+
+                    document.getElementById('id').value = tarea.id;
+                    document.getElementById('titulo').value = tarea.titulo;
+                    document.getElementById('descripcion').value = tarea.descripcion;
+                    document.getElementById('fecha_limite').value = fechaFormateada;
+                    document.getElementById('estado').value = tarea.estado;
+                } catch (error) {
+                    console.error('Error al cargar la tarea:', error);
+                    alert('Hubo un problema al cargar la tarea.');
+                }
+            } else {
+                alert('ID de tarea no encontrado en la URL.');
+            }
+        });
+
+        // Manejar el envío del formulario con axios
+        document.getElementById('form-editar').addEventListener('submit', async function (e) {
+            e.preventDefault(); // Prevenir el envío tradicional del formulario
+
+            const id = document.getElementById('id').value;
+            const titulo = document.getElementById('titulo').value;
+            const descripcion = document.getElementById('descripcion').value;
+            const fecha_limite = document.getElementById('fecha_limite').value;
+            const estado = document.getElementById('estado').value;
+
+            try {
+                // Enviar los datos al servidor para actualizar la tarea
+                const res = await axios.post('/api/actualizar-tarea', {
+                    id,
+                    titulo,
+                    descripcion,
+                    fecha_limite,
+                    estado
+                });
+
+                // Si la tarea se actualizó correctamente
+                if (res.data.success) {
+                    alert('Tarea actualizada exitosamente');
+                    // Redirigir al usuario a la página de inicio
+                    window.location.href = 'index.html';
+                } else {
+                    alert('Hubo un problema al actualizar la tarea');
+                }
+            } catch (error) {
+                console.error('Error al actualizar tarea:', error);
+                alert('Hubo un error al actualizar la tarea. Intenta de nuevo.');
+            }
+        });
+    </script>
+</body>
+</html>

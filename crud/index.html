@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Tareas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            margin-top: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .card {
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            background-color: #333;
+            width: 100%;
+            max-width: 900px;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .estado-pendiente, .estado-completada {
+            display: inline-block;
+            padding: 8px 20px;
+            border-radius: 50px;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .estado-pendiente {
+            background-color: #f39c12; /* Amarillo */
+        }
+
+        .estado-completada {
+            background-color: #28a745; /* Verde */
+        }
+
+        .acciones {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #mensaje-confirmacion {
+            margin-top: 20px;
+            text-align: center;
+            padding: 10px;
+            background-color: #28A745;
+            color: white;
+            border-radius: 5px;
+            display: none;
+        }
+
+        table.table-dark {
+            background-color: #212529;
+            color: white;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: center;
+            border: 1px solid #444;
+        }
+
+        th {
+            background-color: #333;
+        }
+
+        .btn {
+            font-size: 14px;
+        }
+
+        .btn-warning {
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="index.html">Inicio</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="tareas.html">Agregar Tareas</a>
+                    </li>
+                </ul>
+                <!-- Botón para cerrar sesión -->
+                <button id="cerrar-sesion" class="btn btn-outline-danger ms-auto">Cerrar Sesión</button>
+            </div>
+        </div>
+    </nav>
+
+    <div id="mensaje-confirmacion">Tarea agregada con éxito</div>
+
+    <div class="container">
+        <div class="card">
+            <h2 class="text-center mb-4">Lista de Tareas</h2>
+            <table class="table table-dark">
+                <thead>
+                    <tr>
+                        <th>Título</th>
+                        <th>Descripción</th>
+                        <th>Fecha Límite</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla-tareas">
+                    <!-- Las tareas se cargarán aquí -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        function formatearFecha(fecha) {
+            const d = new Date(fecha);
+            const dia = String(d.getDate()).padStart(2, '0');
+            const mes = String(d.getMonth() + 1).padStart(2, '0');
+            const anio = d.getFullYear();
+            return `${dia}/${mes}/${anio}`;
+        }
+
+        async function cargarTareas() {
+            try {
+                const res = await axios.get('/api/tareas');
+                console.log('Tareas recibidas:', res.data);  // Agregar para depuración
+
+                const tareas = res.data;
+                const tablaTareas = document.getElementById('tabla-tareas');
+                tablaTareas.innerHTML = '';
+
+                tareas.forEach(tarea => {
+                    const tr = document.createElement('tr');
+                    const tdTitulo = document.createElement('td');
+                    tdTitulo.textContent = tarea.titulo;
+
+                    const tdDescripcion = document.createElement('td');
+                    tdDescripcion.textContent = tarea.descripcion;
+
+                    const tdFechaLimite = document.createElement('td');
+                    tdFechaLimite.textContent = formatearFecha(tarea.fecha_limite);
+
+                    const tdEstado = document.createElement('td');
+                    tdEstado.innerHTML = `<span class="estado-${tarea.estado}">${tarea.estado.charAt(0).toUpperCase() + tarea.estado.slice(1)}</span>`;
+
+                    const tdAcciones = document.createElement('td');
+                    const divAcciones = document.createElement('div');
+                    divAcciones.classList.add('acciones');
+
+
+                    const botonEditar = document.createElement('button');
+                    botonEditar.classList.add('btn', 'btn-warning', 'me-2');
+                    botonEditar.textContent = 'Editar';
+                    botonEditar.onclick = () => {
+                        window.location.href = `editar.html?id=${tarea.id}`;
+                    };
+
+                    const botonEliminar = document.createElement('button');
+                    botonEliminar.classList.add('btn', 'btn-danger');
+                    botonEliminar.textContent = 'Eliminar';
+                    botonEliminar.onclick = async () => {
+                        // Confirmación antes de eliminar
+                        const confirmacion = confirm(`¿Estás seguro de que quieres eliminar la tarea: "${tarea.titulo}"?`);
+                        if (confirmacion) {
+                            try {
+                                const response = await axios.delete(`/api/tareas/${tarea.id}`);
+                                if (response.status === 200) {
+                                    cargarTareas();
+                                } else {
+                                    alert('No se pudo eliminar la tarea');
+                                }
+                            } catch (error) {
+                                alert('Error al eliminar la tarea');
+                                console.error(error);
+                            }
+                        }
+                    };
+
+                    divAcciones.appendChild(botonEditar);
+                    divAcciones.appendChild(botonEliminar);
+                    tdAcciones.appendChild(divAcciones);
+
+                    tr.appendChild(tdTitulo);
+                    tr.appendChild(tdDescripcion);
+                    tr.appendChild(tdFechaLimite);
+                    tr.appendChild(tdEstado);
+                    tr.appendChild(tdAcciones);
+
+                    tablaTareas.appendChild(tr);
+                });
+            } catch (error) {
+                console.error('Error al cargar las tareas:', error);
+            }
+        }
+
+        window.onload = cargarTareas;
+
+        // Funcionalidad del botón de cerrar sesión
+        document.getElementById('cerrar-sesion').addEventListener('click', async function () {
+            try {
+                const res = await axios.get('/api/logout');
+                if (res.data.success) {
+                    window.location.href = 'inicio.html'; // Redirigir a la página de inicio de sesión
+                } else {
+                    alert('Error al cerrar sesión');
+                }
+            } catch (error) {
+                console.error('Error al cerrar sesión:', error);
+                alert('Hubo un problema al cerrar sesión. Intenta de nuevo.');
+            }
+        });
+    </script>
+</body>
+</html>

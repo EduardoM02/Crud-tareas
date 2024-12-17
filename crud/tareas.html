@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agregar Tarea</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #F4F4F9;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            margin-top: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        .card {
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            background-color: #fff;
+            width: 100%;
+            max-width: 800px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Menú de navegación -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">Inicio</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="tareas.html">Agregar Tareas</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Formulario de agregar tarea -->
+    <div class="container">
+        <div class="card">
+            <h2 class="text-center mb-4">Agregar Nueva Tarea</h2>
+            <form id="form-tarea">
+                <div class="mb-3">
+                    <label for="titulo" class="form-label">Título de la tarea</label>
+                    <input type="text" id="titulo" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label for="descripcion" class="form-label">Descripción</label>
+                    <textarea id="descripcion" class="form-control" rows="4" required></textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="fecha_limite" class="form-label">Fecha límite</label>
+                    <input type="date" id="fecha_limite" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label for="estado" class="form-label">Estado</label>
+                    <select id="estado" class="form-select" required>
+                        <option value="pendiente">Pendiente</option>
+                        <option value="completada">Completada</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Agregar Tarea</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        // Manejar el formulario de agregar tarea
+        document.getElementById('form-tarea').addEventListener('submit', async function (e) {
+            e.preventDefault(); // Prevenir el envío tradicional del formulario
+
+            const titulo = document.getElementById('titulo').value;
+            const descripcion = document.getElementById('descripcion').value;
+            const fechaLimite = document.getElementById('fecha_limite').value;
+            const estado = document.getElementById('estado').value;
+
+            try {
+                // Enviar los datos al servidor para agregar la tarea
+                const res = await axios.post('/api/tareas', {
+                    titulo,
+                    descripcion,
+                    fechaLimite,
+                    estado
+                });
+
+                // Si la tarea se agregó correctamente
+                if (res.data.success) {
+                    alert('Tarea agregada exitosamente');
+                    // Redirigir al usuario a la página de inicio
+                    window.location.href = 'index.html';
+                } else {
+                    alert('Hubo un problema al agregar la tarea');
+                }
+            } catch (error) {
+                console.error('Error al agregar tarea:', error);
+                alert('Hubo un error al agregar la tarea. Intenta de nuevo.');
+            }
+        });
+    </script>
+</body>
+</html>
